@@ -36,21 +36,10 @@ It should also allow users to select UConn classes from a database, these classe
 - accounts
 ## Process
 - Extract
-	- 
 - Store
-	- 
 - Convert
 	- `ICS` file
 
 ### Extraction
 `pdfplumber`
 https://www.youtube.com/watch?v=ZEaEH_aQcBE
-
-
-
-
-## Name Ideas
-skeduler
-
-HuskyPlan
-
