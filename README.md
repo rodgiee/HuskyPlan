@@ -1,0 +1,2 @@
+# HuskyPlan
+UConn Schedule Builder
