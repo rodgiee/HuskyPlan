@@ -2,11 +2,11 @@ function App() {
 	
   return (
     <>
-    	<header id="header">
+    	<header>
 		<h1>HuskyPlan</h1>
 	</header>
 
-	<div id="body">
+	<div id="main">
 		<div id="classbar">
 			<p>classbar</p>
 		</div>
@@ -17,7 +17,7 @@ function App() {
 	</div>
 
 
-	<footer id="header">
+	<footer>
 		<p>This is a student project and is not affiliated with or endorsed by the University of Connecticut.</p>
 	</footer>
     </>
