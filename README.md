@@ -13,7 +13,7 @@ It should also allow users to select UConn classes from a database, these classe
 	- https://scheduling.uconn.edu/class-schedule-snapshot
 ## Technologies
 - Front-End
-	- React/Typescript
+	- React/Typescript/Tailwind
 - Back-End
 	- FastAPI
 	- python
