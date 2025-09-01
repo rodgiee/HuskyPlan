@@ -8,7 +8,7 @@ function App() {
 
 	<div id="main">
 		<div id="classbar">
-			<p>classbar</p>
+			<p>classbar!</p>
 		</div>
 
 		<div id="calendar">
