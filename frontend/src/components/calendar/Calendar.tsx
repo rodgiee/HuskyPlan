@@ -1,8 +1,9 @@
+import "./Calendar.css"
 
 function ClassBar(){
 	return(
 		<>
-			<div id="calendar">
+			<div className="calendar">
 				<p>calendar</p>
 			</div>
 		</>

@@ -1,8 +1,9 @@
+import "./ClassBar.css"
 
 function ClassBar(){
 	return(
 		<>
-			<div id="classbar">
+			<div className="classbar">
 				<p>classbar</p>
 			</div>
 		</>

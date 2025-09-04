@@ -1,7 +1,7 @@
-import Header from "./components/Header.tsx"
-import Footer from "./components/Footer.tsx"
-import ClassBar from "./components/ClassBar.tsx"
-import Calendar from "./components/Calendar.tsx"
+import Header from "./components/header/Header.tsx"
+import Footer from "./components/footer/Footer.tsx"
+import ClassBar from "./components/classbar/ClassBar.tsx"
+import Calendar from "./components/calendar/Calendar.tsx"
 
 function App() {
 	
@@ -9,7 +9,9 @@ function App() {
     <>
 	<Header/>
 	<div id="main">
-		<ClassBar/>	
+		<ClassBar>
+		
+		</ClassBar>
 		<Calendar/>
 	</div>
 	<Footer/>
