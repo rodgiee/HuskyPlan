@@ -9,9 +9,7 @@ function App() {
     <>
 	<Header/>
 	<div id="main">
-		<ClassBar>
-		
-		</ClassBar>
+		<ClassBar/>
 		<Calendar/>
 	</div>
 	<Footer/>

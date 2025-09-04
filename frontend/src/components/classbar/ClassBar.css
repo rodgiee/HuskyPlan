@@ -3,5 +3,11 @@
 	background-color: brown;
 	flex: 1;
 	display: flex;
+	justify-content: center;
 	height: 90vh;
+}
+
+.button{
+	margin: 10px;
+	height: 20px;
 }
