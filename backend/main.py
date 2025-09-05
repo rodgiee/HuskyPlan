@@ -6,7 +6,7 @@ import requests
 import uvicorn
 import io 
 import pandas as pd
-from constants.courses import ClassKeys, CLASS_DATATYPE
+from constants.courses import ClassKeys
 import numpy as np
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -53,12 +53,12 @@ def fetch_courses():
         response = requests.get(url, stream=True)
         
         if response.status_code == 200:
-            data = pd.read_excel(io.BytesIO(response.content), engine="openpyxl", usecols=list(CLASS_DATATYPE.keys()))
+            data = pd.read_excel(io.BytesIO(response.content), engine="openpyxl", usecols=[key.value for key in ClassKeys])
             
-            # Clean Data
-            data.replace({ClassKeys.CLASSM_MEETING_TIME_START.value, '.'}, np.nan, inplace=True)
-            data.replace({ClassKeys.CLASSM_MEETING_TIME_END.value, '.'}, np.nan, inplace=True)
-            data.replace({ClassKeys.Define_CLASSM_INSTRUCTOR_EMPLID.value, ' '}, np.nan, inplace=True)
+            # Clean Data. Empty meeting times are "." for some reason
+            data.replace({ClassKeys.CLASSM_MEETING_TIME_START.value: '.'}, np.nan, inplace=True)
+            data.replace({ClassKeys.CLASSM_MEETING_TIME_END.value: '.'}, np.nan, inplace=True)
+            data.replace({ClassKeys.Define_CLASSM_INSTRUCTOR_EMPLID.value: ' '}, np.nan, inplace=True)
             data.dropna(inplace=True)
             
             days_of_week = [
@@ -70,6 +70,8 @@ def fetch_courses():
                 ClassKeys.CLASSM_SATURDAY,
                 ClassKeys.CLASSM_SUNDAY,
             ]
+            
+            # Y/N -> True/False
             for day in days_of_week:
                 data.replace({day.value: 'Y'}, True, inplace=True)
                 data.replace({day.value: 'N'}, False, inplace=True)
@@ -81,55 +83,72 @@ def fetch_courses():
                 data[ClassKeys.CLASSM_MEETING_TIME_END.value], format='%I:%M:%S %p'
             ).dt.time
             
-            
-            # Map columns to model field names for db
-            column_mapping = {
-                ClassKeys.CLASS_TERM_LDESC.value: "term_desc",
-                ClassKeys.CLASS_SESSION_LDESC.value: "session_desc",
-                ClassKeys.CLASS_ACAD_ORG_LDESC.value: "acad_org_desc",
-                ClassKeys.CLASS_CAMPUS_LDESC.value: "campus",
-                ClassKeys.CLASS_COURSE_ID.value: "course_id",
-                ClassKeys.CLASS_SUBJECT_LDESC.value: "subject_desc",
-                ClassKeys.CLASS_SUBJECT_CD.value: "subject_code",
-                ClassKeys.CLASS_CATALOG_NBR.value: "catalog_number",
-                ClassKeys.CLASS_SECTION.value: "section",
-                ClassKeys.CLASS_COMPONENT_LDESC.value: "component_desc",
-                ClassKeys.CLASS_COMPONENT_CD.value: "component_code",
-                ClassKeys.CASSC_UNITS_MINIMUM.value: "min_units",
-                ClassKeys.CASSC_UNITS_MAXIMUM.value: "max_units",
-                ClassKeys.CLASS_DESCR.value: "description",
-                ClassKeys.CLASSM_MONDAY.value: "on_monday",
-                ClassKeys.CLASSM_TUESDAY.value: "on_tuesday",
-                ClassKeys.CLASSM_WEDNESDAY.value: "on_wednesday",
-                ClassKeys.CLASSM_THURSDAY.value: "on_thursday",
-                ClassKeys.CLASSM_FRIDAY.value: "on_friday",
-                ClassKeys.CLASSM_SATURDAY.value: "on_saturday",
-                ClassKeys.CLASSM_SUNDAY.value: "on_sunday",
-                ClassKeys.CLASSM_MEETING_TIME_START.value: "time_start",
-                ClassKeys.CLASSM_MEETING_TIME_END.value: "time_end",
-                ClassKeys.Define_CLASSM_INSTRUCTOR_EMPLID.value: "instructor_id",
-                ClassKeys.Define_CLASSM_INSTRUCTOR_NAME.value: "instructor_name",
-                ClassKeys.CLASSM_INSTRUCTOR_ROLE.value: "instructor_role",
-                ClassKeys.CLASS_INSTRUCTION_MODE_LDESC.value: "instruction_mode",
-                ClassKeys.CLASSM_FACILITY_LDESC.value: "facility_desc",
-                ClassKeys.CLASS_ENRL_CAP.value: "enrollment_cap",
-                ClassKeys.CLASS_ENRL_TOT.value: "enrollment_total",
-                ClassKeys.CLASS_WAIT_CAP.value: "waitlist_cap",
-                ClassKeys.CLASS_WAIT_TOT.value: "waitlist_total"
-            }
-            data.rename(columns=column_mapping, inplace=True)
-
-            # Update db with data
+            # Normalize and insert data
             db = SessionLocal()
             try:
                 # Clear existing data
+                db.query(models.SectionProfessor).delete()
+                db.query(models.Professor).delete()
+                db.query(models.Section).delete()
                 db.query(models.Course).delete()
                 db.commit()
-                
-                # Insert new data
+
+                # Insert data into db
                 for _, row in data.iterrows():
-                    course = models.Course(**row.to_dict())
-                    db.add(course)
+                    # Reuse or create professor
+                    professor = db.query(models.Professor).filter_by(
+                        id= row[ClassKeys.Define_CLASSM_INSTRUCTOR_EMPLID.value]
+                    ).first()
+                    if not professor:
+                        professor = models.Professor(
+                            id=row[ClassKeys.Define_CLASSM_INSTRUCTOR_EMPLID.value],
+                            name=row[ClassKeys.Define_CLASSM_INSTRUCTOR_NAME.value],
+                        )
+                        db.add(professor)
+                        db.flush()
+
+                    # Reuse or create course
+                    course = db.query(models.Course).filter_by(
+                        id = row[ClassKeys.CLASS_COURSE_ID.value]
+                    ).first()
+                    if not course:
+                        course = models.Course(
+                            id=row[ClassKeys.CLASS_COURSE_ID.value],
+                            subject_code=row[ClassKeys.CLASS_SUBJECT_CD.value],
+                            subject_desc=row[ClassKeys.CLASS_SUBJECT_LDESC.value],
+                            catalog_number=row[ClassKeys.CLASS_CATALOG_NBR.value],
+                            description=row[ClassKeys.CLASS_DESCR.value],
+                            min_credits=row[ClassKeys.CASSC_UNITS_MINIMUM.value],
+                            max_credits=row[ClassKeys.CASSC_UNITS_MAXIMUM.value],
+                        )
+                        db.add(course)
+                        db.flush()
+
+                    # Create a section, should be unique
+                    section = models.Section(
+                        course_id=course.id,
+                        section_catalog=row[ClassKeys.CLASS_SECTION.value],
+                        days_of_week="".join([day.value for day in days_of_week if row[day.value]]),
+                        time_start=str(row[ClassKeys.CLASSM_MEETING_TIME_START.value]),
+                        time_end=str(row[ClassKeys.CLASSM_MEETING_TIME_END.value]),
+                        location=row[ClassKeys.CLASSM_FACILITY_LDESC.value],
+                        instruction_type=row[ClassKeys.CLASS_INSTRUCTION_MODE_LDESC.value],
+                        enrollment_cap=row[ClassKeys.CLASS_ENRL_CAP.value],
+                        enrollment_total=row[ClassKeys.CLASS_ENRL_TOT.value],
+                        waitlist_cap=row[ClassKeys.CLASS_WAIT_CAP.value],
+                        waitlist_total=row[ClassKeys.CLASS_WAIT_TOT.value],
+                    )
+                    db.add(section)
+                    db.flush()
+
+                    # Link professor to section
+                    section_professor = models.SectionProfessor(
+                        section_id=section.id,
+                        professor_id=professor.id,
+                        role=row[ClassKeys.CLASSM_INSTRUCTOR_ROLE.value]
+                    )
+                    db.add(section_professor)
+
                 db.commit()
             except Exception as db_error:
                 db.rollback()
@@ -137,26 +156,25 @@ def fetch_courses():
             finally:
                 db.close()
             
-            
     except Exception as e:
         logger.exception(e)
 
-
 # Configure scheduler 
 scheduler = BackgroundScheduler()
-trigger = CronTrigger(second='*/20')
+trigger = CronTrigger(second='*/10')
 scheduler.add_job(fetch_courses, trigger)
 
 
 @app.get("/")
 async def root():
-    print('g')
     return { "message" : "Hello World" }
 
 @app.get("/classes/{course_id}")
 async def classes(course_id: int, db: Session = Depends(get_db)):
     logger.debug(course_id)
     classes = crud.get_course_by_course_id(db, course_id)
+    
+    # TODO Serialize response
     if classes is None:
         raise HTTPException(status_code=404, detail="Class not found")
     return classes

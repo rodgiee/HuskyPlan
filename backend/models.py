@@ -1,51 +1,58 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Time
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from typing import List, Optional
 
 from database import Base
-
 
 class Course(Base):
     __tablename__ = "courses"
     
-    # Auto incrementing id
-    id = Column(Integer, primary_key=True)
-
-    # Course fields
-    term_desc = Column(String)
-    session_desc = Column(String)
-    acad_org_desc = Column(String)
-    campus = Column(String)
-    course_id = Column(String) # id?
-    subject_desc = Column(String)
-    subject_code = Column(String)
-    catalog_number = Column(String)
-    section = Column(String)
-    component_desc = Column(String)
-    component_code = Column(String)
-    min_units = Column(Integer)
-    max_units = Column(Integer)
-    description = Column(String)
-    on_monday = Column(Boolean)
-    on_tuesday = Column(Boolean)
-    on_wednesday = Column(Boolean)
-    on_thursday = Column(Boolean)
-    on_friday = Column(Boolean)
-    on_saturday = Column(Boolean)
-    on_sunday = Column(Boolean)
-    time_start = Column(Time)
-    time_end = Column(Time)
+    id: Mapped[str] = mapped_column(primary_key=True, unique=True)
+    subject_code: Mapped[str] = mapped_column()
+    subject_desc: Mapped[Optional[str]] = mapped_column()
+    catalog_number: Mapped[str] = mapped_column()
+    description: Mapped[Optional[str]] = mapped_column()
+    min_credits: Mapped[int] = mapped_column()
+    max_credits: Mapped[int] = mapped_column()
     
-    instructor_id = Column(Integer)
-    instructor_name = Column(String)
-    instructor_role = Column(String)
+    sections: Mapped[List["Section"]] = relationship(back_populates="course")
+
+
+class Section(Base):
+    __tablename__ = "sections"
     
-    instruction_mode = Column(String)
-    facility_desc = Column(String)
-    enrollment_cap = Column(Integer)
-    enrollment_total = Column(Integer)
-    waitlist_cap = Column(Integer)
-    waitlist_total = Column(Integer)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"))
+    section_catalog: Mapped[str] = mapped_column()
+    days_of_week: Mapped[str] = mapped_column() # TODO change to time
+    time_start: Mapped[str] = mapped_column()
+    time_end: Mapped[str] = mapped_column()
+    location: Mapped[Optional[str]] = mapped_column()
+    instruction_type: Mapped[Optional[str]] = mapped_column()
+    enrollment_cap: Mapped[Optional[int]] = mapped_column()
+    enrollment_total: Mapped[Optional[int]] = mapped_column()
+    waitlist_cap: Mapped[Optional[int]] = mapped_column()
+    waitlist_total: Mapped[Optional[int]] = mapped_column()
+    
+    course: Mapped["Course"] = relationship(back_populates="sections")
+    professors: Mapped[List["SectionProfessor"]] = relationship(back_populates="section")
 
-    # items = relationship("Item", back_populates="owner")
+
+class Professor(Base):
+    __tablename__ = "professors"
+    
+    id: Mapped[int] = mapped_column(unique=True, primary_key=True)
+    name: Mapped[Optional[str]] = mapped_column()
 
 
+class SectionProfessor(Base):
+    __tablename__ = "section_professors"
+    
+    professor_id: Mapped[int] = mapped_column(ForeignKey("professors.id"), primary_key=True)
+    section_id: Mapped[int] = mapped_column(ForeignKey("sections.id"), primary_key=True)
+    role: Mapped[Optional[str]] = mapped_column()
+    
+    section: Mapped["Section"] = relationship(back_populates="professors")
+    professor: Mapped["Professor"] = relationship()

@@ -1,8 +1,19 @@
-from sqlalchemy.orm import Session
-from models import Course
+from sqlalchemy.orm import Session, joinedload
+from models import Course, Section, SectionProfessor
 
-# Testing
-def get_course_by_course_id(db: Session, course_id: int):
-    return db.query(Course).where(Course.course_id == course_id).first()
+# Getting course with sections by course id
+def get_course_by_course_id(db: Session, course_id: str):
+     return (
+        db.query(Course)
+        .options(
+            joinedload(Course.sections)
+            .joinedload(Section.professors)
+            .joinedload(SectionProfessor.professor)
+        )
+        .filter(Course.id == course_id)
+        .first()
+    )
+
+
 
 

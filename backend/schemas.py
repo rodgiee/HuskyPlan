@@ -1,46 +1,55 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class CourseBase(BaseModel):
-
-    # Course fields
-    term_desc: str
-    session_desc: str
-    acad_org_desc: str
-    campus: str
-    course_id: str
-    subject_desc: str
+    course_id_uconn: str
     subject_code: str
+    subject_desc: Optional[str]
     catalog_number: str
-    section: str
-    component_desc: str
-    component_code: str
-    min_units: str
-    max_units: str
-    description: str
-    on_monday: bool
-    on_tuesday: bool
-    on_wednesday: bool
-    on_thursday: bool
-    on_friday: bool
-    on_saturday: bool
-    on_sunday: bool
-    time_start: str
-    time_end: str
-    
-    instructor_id: int
-    instructor_name: str
-    instructor_role: str
-    
-    instruction_mode: str
-    facility_desc: str
-    enrollment_cap: int
-    enrollment_total: int
-    waitlist_cap: int
-    waitlist_total: int
+    description: Optional[str]
+    min_credits: int
+    max_credits: int
 
 class Course(CourseBase):
-    # Auto incrementing id
     id: int
-    
+
+    class Config:
+        orm_mode = True
+
+class SectionBase(BaseModel):
+    course_id: int
+    section_catalog: str
+    days_of_week: str
+    time_start: str
+    time_end: str
+    location: Optional[str]
+    instruction_type: Optional[str]
+    enrollment_cap: Optional[int]
+    enrollment_total: Optional[int]
+    waitlist_cap: Optional[int]
+    waitlist_total: Optional[int]
+
+class Section(SectionBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+class ProfessorBase(BaseModel):
+    professor_id_uconn: str
+    professor_name: Optional[str]
+
+class Professor(ProfessorBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+class SectionProfessorBase(BaseModel):
+    section_id: int
+    professor_id: int
+    role: Optional[str]
+
+class SectionProfessor(SectionProfessorBase):
     class Config:
         orm_mode = True
