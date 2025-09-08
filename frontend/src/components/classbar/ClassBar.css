@@ -3,11 +3,17 @@
 	background-color: brown;
 	flex: 1;
 	display: flex;
-	justify-content: center;
-	height: 90vh;
+	height: 83vh;
+	flex-direction: column;
 }
 
 .button{
 	margin: 10px;
 	height: 20px;
+}
+
+.class-entry{
+	background-color: gray;
+	padding: 0;
+	margin: 10px;
 }
