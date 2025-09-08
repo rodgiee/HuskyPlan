@@ -1,3 +1,4 @@
+import {useState} from "react";
 import "./Modal.css";
 
 function Modal(props: any){
@@ -8,6 +9,8 @@ function Modal(props: any){
 
 	// to callback to close out modal
 	const toggleModal = props.setModal;
+
+	const [classInput, setClassInput] = useState("");
 
 	function handleSubmit(e : any) {
 		// Prevent the browser from reloading the page
@@ -34,7 +37,7 @@ function Modal(props: any){
 		));
 
 		// clear form input afer submission
-		//setInput("");
+		setClassInput("");
 	  }
 	return(
 		<>
@@ -43,7 +46,8 @@ function Modal(props: any){
 					<h3 className="modal-header">HuskyPlan Classes</h3>
 					<form method="post" onSubmit={handleSubmit}>
 						<label>
-							Class: <input name="classInput"/>
+							{/* value and onChange are assigned state variable to be allowed to be cleared on submission */}
+							Class: <input value={classInput} onChange={(e)=> setClassInput(e.target.value)} name="classInput"/>
 						</label>
 					</form>
 					<button onClick={toggleModal} className="modal-close">Close</button>

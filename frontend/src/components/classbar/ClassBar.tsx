@@ -20,9 +20,9 @@ function ClassBar(){
 	);
 
 	const mappedClasses = classes.map(classCurrent => 
-						<li>
-							<p>{classCurrent.name}</p>
-							<button className="delete-class" onClick={() => removeClass(classCurrent.id)}>delete</button>
+						<li className="class">
+							<p className="class name">{classCurrent.name}</p>
+							<button onClick={() => removeClass(classCurrent.id)}>delete</button>
 						</li>
 					 );
 
@@ -41,7 +41,7 @@ function ClassBar(){
 	return(
 		<>
 			<div className="classbar">
-				<ul>{mappedClasses}</ul>
+				<div>{mappedClasses}</div>
 				<button onClick={toggleModal} className="button"> Add Class</button>
 				{isModalOpen && <Modal classes={classes} setClasses={setClasses} setModal={toggleModal}/>}
 			</div>

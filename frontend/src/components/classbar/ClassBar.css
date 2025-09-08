@@ -12,8 +12,16 @@
 	height: 20px;
 }
 
-.class-entry{
+.class{
+	display: flex;
+	align-items: center;
+}
+
+.class.name{
 	background-color: gray;
 	padding: 0;
 	margin: 10px;
+
 }
+
+

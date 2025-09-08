@@ -1,3 +1,7 @@
+.modal-body{
+	display: flex;
+	align-items: center;
+}
 
 .overlay{
 	position: fixed;
@@ -32,9 +36,4 @@
 	margin: 0;
 }
 
-.modal-close{
-	margin: 75px;
-	height: 50px;
-	width: 50%;
-}
 
