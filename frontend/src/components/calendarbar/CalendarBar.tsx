@@ -11,9 +11,9 @@ import "./CalendarBar.css"
 
 const myEventsList : any = [
 	{
-		title: "CSE3300 Exam",
-		start: new Date(2025, 8, 10, 13, 0), 
-		end: new Date(2025, 8, 10, 15, 0),  
+		title: "CSE3300 Exam (TEST)",
+		start: new Date(2025, 8, 10, 7, 0), 
+		end: new Date(2025, 8, 10, 9, 0),  
 	}
 ]
 function CalendarBar(){
