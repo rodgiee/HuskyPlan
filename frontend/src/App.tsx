@@ -3,7 +3,7 @@ import { useState } from "react"
 import Header from "./components/header/Header.tsx"
 import Footer from "./components/footer/Footer.tsx"
 import ClassBar from "./components/classbar/ClassBar.tsx"
-import CalendarBar from "./components/calendar/CalendarBar.tsx"
+import CalendarBar from "./components/calendarbar/CalendarBar.tsx"
 
 function App() {
 
