@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from typing import List, Optional
 
-from database import Base
+from backend.database import Base
 
 class Course(Base):
     __tablename__ = "courses"

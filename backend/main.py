@@ -6,14 +6,14 @@ import requests
 import uvicorn
 import io 
 import pandas as pd
-from constants.courses import ClassKeys
+from backend.constants.courses import ClassKeys
 import numpy as np
 
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
-import crud, models, schemas
-from database import SessionLocal, engine
+import backend.crud as crud, backend.models as models
+from backend.database import SessionLocal, engine
 
 # We don't want this feature
 pd.set_option('future.no_silent_downcasting', True)
