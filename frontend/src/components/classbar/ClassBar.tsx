@@ -2,24 +2,16 @@ import { useState } from "react";
 import "./ClassBar.css"
 import Modal from "./modal/Modal";
 
-function ClassBar(){
-	// track user entries 
-	const [classes, setClasses] = useState(
-		[
-			{
-				name: "CSE3300",
-				id: "CSE3300"
-			},
-			{
-				name: "MATH2210Q",
-				id: "MATH2210Q"
-			}
+function ClassBar(props : any){
 
-		
-		]
-	);
+	// passed from parent App.tsx
+	// classbar has classes to display user added classes on classbar
+	const classes = props.classes
+	const setClasses = props.setClasses
 
-	const mappedClasses = classes.map(classCurrent => 
+	// for each inputted class wrap in HTML 
+	// allow delete for each button (deletes are based on class id) 
+	const mappedClasses = classes.map((classCurrent : any) => 
 						<li className="class">
 							<p className="class name">{classCurrent.name}</p>
 							<button onClick={() => removeClass(classCurrent.id)}>delete</button>
@@ -27,7 +19,7 @@ function ClassBar(){
 					 );
 
 	function removeClass(removeId : any){
-		const removedIdList = classes.filter(classCurrent => classCurrent.id !== removeId);
+		const removedIdList = classes.filter((classCurrent : any) => classCurrent.id !== removeId);
 
 		setClasses(removedIdList);
 	}
