@@ -7,12 +7,6 @@ body {
 	margin: 0px;
 }
 
-header{
-	font-size: 12px;
-	color: white;
-	background-color: #000E2F;
-	padding: 10px;
-}
 
 footer{
 	font-size: 12px;
@@ -27,12 +21,6 @@ footer{
 	display: flex;
 }
 
-#classbar{
-	background-color: brown;
-	flex: 1;
-	display: flex;
-	height: 80vh;
-}
 
 #calendar{
 	background-color: green;

@@ -1,25 +1,18 @@
+import Header from "./components/header/Header.tsx"
+import Footer from "./components/footer/Footer.tsx"
+import ClassBar from "./components/classbar/ClassBar.tsx"
+import Calendar from "./components/calendar/Calendar.tsx"
+
 function App() {
 	
   return (
     <>
-    	<header>
-		<h1>HuskyPlan</h1>
-	</header>
-
+	<Header/>
 	<div id="main">
-		<div id="classbar">
-			<p>classbar</p>
-		</div>
-
-		<div id="calendar">
-			<p>calendar</p>
-		</div>
+		<ClassBar/>
+		<Calendar/>
 	</div>
-
-
-	<footer>
-		<p>This is a student project and is not affiliated with or endorsed by the University of Connecticut.</p>
-	</footer>
+	<Footer/>
     </>
   )
 }
