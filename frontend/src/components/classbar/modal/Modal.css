@@ -17,6 +17,10 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
+
+	/* for stacking  over calendar componenets*/
+	/* removing this will have calendar lines go over modal*/
+	z-index: 1;
 }
 
 .modal-box{
