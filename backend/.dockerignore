@@ -1,0 +1,7 @@
+**pycache**/
+_.pyc
+_.pyo
+\*.pyd
+.venv/
+husky_plan.db
+.env
