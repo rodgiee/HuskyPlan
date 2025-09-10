@@ -3,7 +3,7 @@ import "./ClassBar.css"
 import Modal from "./modal/Modal";
 
 function ClassBar(props : any){
-
+	//
 	// passed from parent App.tsx
 	// classbar has classes to display user added classes on classbar
 	const classes = props.classes
