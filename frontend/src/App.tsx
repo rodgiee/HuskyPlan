@@ -3,7 +3,7 @@ import { useState } from "react"
 import Header from "./components/header/Header.tsx"
 import Footer from "./components/footer/Footer.tsx"
 import ClassBar from "./components/classbar/ClassBar.tsx"
-import Calendar from "./components/calendar/Calendar.tsx"
+import CalendarBar from "./components/calendar/CalendarBar.tsx"
 
 function App() {
 
@@ -27,8 +27,8 @@ function App() {
     <>
 	<Header/>
 	<div id="main">
-		<ClassBar classes={classes} setClasses={setClasses}/>
-		<Calendar/>
+		<ClassBar test={[classes, setClasses]} classes={classes} setClasses={setClasses}/>
+		<CalendarBar/>
 	</div>
 	<Footer/>
     </>
