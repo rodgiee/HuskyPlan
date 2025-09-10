@@ -21,7 +21,7 @@ function CalendarBar(){
 	return(
 		<>
 			<div className="calendar">
-				<div style= {{height: '500px'}}>
+				<div style= {{height: '500px', width: '800px'}}>
 					<Calendar
 					localizer={localizer}
 					events={myEventsList}
