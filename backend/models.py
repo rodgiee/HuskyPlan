@@ -1,10 +1,9 @@
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import relationship
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from typing import List, Optional
 
 from backend.database import Base
+
 
 class Course(Base):
     __tablename__ = "courses"
@@ -24,12 +23,8 @@ class Section(Base):
     __tablename__ = "sections"
     
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"))
+    course_id: Mapped[str] = mapped_column(ForeignKey("courses.id"))
     section_catalog: Mapped[str] = mapped_column()
-    days_of_week: Mapped[str] = mapped_column() # TODO change to time
-    time_start: Mapped[str] = mapped_column()
-    time_end: Mapped[str] = mapped_column()
-    location: Mapped[Optional[str]] = mapped_column()
     instruction_type: Mapped[Optional[str]] = mapped_column()
     enrollment_cap: Mapped[Optional[int]] = mapped_column()
     enrollment_total: Mapped[Optional[int]] = mapped_column()
@@ -38,20 +33,35 @@ class Section(Base):
     
     course: Mapped["Course"] = relationship(back_populates="sections")
     professors: Mapped[List["SectionProfessor"]] = relationship(back_populates="section")
+    meetings: Mapped[List["Meeting"]] = relationship(back_populates="section")
+
+
+class Meeting(Base):
+    __tablename__ = "meetings"
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    section_id: Mapped[int] = mapped_column(ForeignKey("sections.id"))
+    days_of_week: Mapped[str] = mapped_column()
+    time_start: Mapped[Optional[str]] = mapped_column()
+    time_end: Mapped[Optional[str]] = mapped_column()
+    location: Mapped[Optional[str]] = mapped_column()
+    
+    section: Mapped["Section"] = relationship(back_populates="meetings")
 
 
 class Professor(Base):
     __tablename__ = "professors"
     
-    id: Mapped[int] = mapped_column(unique=True, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[Optional[str]] = mapped_column()
 
 
 class SectionProfessor(Base):
     __tablename__ = "section_professors"
     
-    professor_id: Mapped[int] = mapped_column(ForeignKey("professors.id"), primary_key=True)
-    section_id: Mapped[int] = mapped_column(ForeignKey("sections.id"), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    professor_id: Mapped[int] = mapped_column(ForeignKey("professors.id"))
+    section_id: Mapped[int] = mapped_column(ForeignKey("sections.id"))
     role: Mapped[Optional[str]] = mapped_column()
     
     section: Mapped["Section"] = relationship(back_populates="professors")

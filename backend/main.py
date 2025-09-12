@@ -6,7 +6,7 @@ import requests
 import uvicorn
 import io 
 import pandas as pd
-from backend.constants.courses import ClassKeys
+from backend.constants.courses import ClassKeys, CLASS_CONVERTERS
 import numpy as np
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -55,10 +55,11 @@ def fetch_courses():
         if response.status_code == 200:
             data = pd.read_excel(io.BytesIO(response.content), engine="openpyxl", usecols=[key.value for key in ClassKeys])
             
-            # Clean Data. Empty meeting times are "." for some reason
+            # Clean Data. Some empty fields are "." for some reason
             data.replace({ClassKeys.CLASSM_MEETING_TIME_START.value: '.'}, np.nan, inplace=True)
             data.replace({ClassKeys.CLASSM_MEETING_TIME_END.value: '.'}, np.nan, inplace=True)
             data.replace({ClassKeys.Define_CLASSM_INSTRUCTOR_EMPLID.value: ' '}, np.nan, inplace=True)
+            data.replace({ClassKeys.CLASSM_INSTRUCTOR_ROLE.value: '.'}, np.nan, inplace=True)
             data.dropna(inplace=True)
             
             days_of_week = [
@@ -97,7 +98,7 @@ def fetch_courses():
                 for _, row in data.iterrows():
                     # Reuse or create professor
                     professor = db.query(models.Professor).filter_by(
-                        id= row[ClassKeys.Define_CLASSM_INSTRUCTOR_EMPLID.value]
+                        id=row[ClassKeys.Define_CLASSM_INSTRUCTOR_EMPLID.value]
                     ).first()
                     if not professor:
                         professor = models.Professor(
@@ -105,11 +106,11 @@ def fetch_courses():
                             name=row[ClassKeys.Define_CLASSM_INSTRUCTOR_NAME.value],
                         )
                         db.add(professor)
-                        db.flush()
+                        db.flush() # note: flush is needed if we need primary keys
 
                     # Reuse or create course
                     course = db.query(models.Course).filter_by(
-                        id = row[ClassKeys.CLASS_COURSE_ID.value]
+                        id=row[ClassKeys.CLASS_COURSE_ID.value]
                     ).first()
                     if not course:
                         course = models.Course(
@@ -124,30 +125,48 @@ def fetch_courses():
                         db.add(course)
                         db.flush()
 
-                    # Create a section, should be unique
-                    section = models.Section(
-                        course_id=course.id,
-                        section_catalog=row[ClassKeys.CLASS_SECTION.value],
+                    # Reuse or create section
+                    section = db.query(models.Section).filter_by(
+                        course_id=row[ClassKeys.CLASS_COURSE_ID.value],
+                        section_catalog=row[ClassKeys.CLASS_SECTION.value]
+                    ).first()
+                    if not section:
+                        section = models.Section(
+                            course_id=course.id,
+                            section_catalog=row[ClassKeys.CLASS_SECTION.value],
+                            instruction_type=row[ClassKeys.CLASS_INSTRUCTION_MODE_LDESC.value],
+                            enrollment_cap=row[ClassKeys.CLASS_ENRL_CAP.value],
+                            enrollment_total=row[ClassKeys.CLASS_ENRL_TOT.value],
+                            waitlist_cap=row[ClassKeys.CLASS_WAIT_CAP.value],
+                            waitlist_total=row[ClassKeys.CLASS_WAIT_TOT.value],
+                        )
+                        db.add(section)
+                        db.flush()
+
+                    # Always insert meeting (a section can have many meetings)
+                    meeting = models.Meeting(
+                        section_id=section.id,
                         days_of_week="".join([day.value for day in days_of_week if row[day.value]]),
                         time_start=str(row[ClassKeys.CLASSM_MEETING_TIME_START.value]),
                         time_end=str(row[ClassKeys.CLASSM_MEETING_TIME_END.value]),
                         location=row[ClassKeys.CLASSM_FACILITY_LDESC.value],
-                        instruction_type=row[ClassKeys.CLASS_INSTRUCTION_MODE_LDESC.value],
-                        enrollment_cap=row[ClassKeys.CLASS_ENRL_CAP.value],
-                        enrollment_total=row[ClassKeys.CLASS_ENRL_TOT.value],
-                        waitlist_cap=row[ClassKeys.CLASS_WAIT_CAP.value],
-                        waitlist_total=row[ClassKeys.CLASS_WAIT_TOT.value],
                     )
-                    db.add(section)
-                    db.flush()
+                    db.add(meeting)
 
                     # Link professor to section
-                    section_professor = models.SectionProfessor(
+                    section_professor = db.query(models.SectionProfessor).filter_by(
                         section_id=section.id,
-                        professor_id=professor.id,
-                        role=row[ClassKeys.CLASSM_INSTRUCTOR_ROLE.value]
-                    )
-                    db.add(section_professor)
+                        professor_id=professor.id
+                    ).first()
+
+                    if not section_professor:
+                        section_professor = models.SectionProfessor(
+                            section_id=section.id,
+                            professor_id=professor.id,
+                            role=row[ClassKeys.CLASSM_INSTRUCTOR_ROLE.value]
+                        )
+                        
+                        db.add(section_professor)
 
                 db.commit()
             except Exception as db_error:
@@ -161,7 +180,9 @@ def fetch_courses():
 
 # Configure scheduler 
 scheduler = BackgroundScheduler()
-trigger = CronTrigger(second='*/10')
+
+fetch_courses()
+trigger = CronTrigger(second='0')
 scheduler.add_job(fetch_courses, trigger)
 
 
