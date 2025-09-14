@@ -5,8 +5,9 @@ import logging
 import requests
 import uvicorn
 import io 
+import json
 import pandas as pd
-from backend.constants.courses import ClassKeys, CLASS_CONVERTERS
+from backend.constants.courses import ClassKeys
 import numpy as np
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -14,6 +15,8 @@ from sqlalchemy.orm import Session
 
 import backend.crud as crud, backend.models as models
 from backend.database import SessionLocal, engine
+from backend.schemas import CourseSchema
+import os
 
 # We don't want this feature
 pd.set_option('future.no_silent_downcasting', True)
@@ -61,6 +64,9 @@ def fetch_courses():
             data.replace({ClassKeys.Define_CLASSM_INSTRUCTOR_EMPLID.value: ' '}, np.nan, inplace=True)
             data.replace({ClassKeys.CLASSM_INSTRUCTOR_ROLE.value: '.'}, np.nan, inplace=True)
             data.dropna(inplace=True)
+            
+            # Only storrs for now :(
+            data = data[data[ClassKeys.CLASS_CAMPUS_LDESC.value] == "Storrs"]
             
             days_of_week = [
                 ClassKeys.CLASSM_MONDAY,
@@ -110,11 +116,11 @@ def fetch_courses():
 
                     # Reuse or create course
                     course = db.query(models.Course).filter_by(
-                        id=row[ClassKeys.CLASS_COURSE_ID.value]
+                        subject_code=row[ClassKeys.CLASS_SUBJECT_CD.value],
+                        catalog_number=row[ClassKeys.CLASS_CATALOG_NBR.value],
                     ).first()
                     if not course:
                         course = models.Course(
-                            id=row[ClassKeys.CLASS_COURSE_ID.value],
                             subject_code=row[ClassKeys.CLASS_SUBJECT_CD.value],
                             subject_desc=row[ClassKeys.CLASS_SUBJECT_LDESC.value],
                             catalog_number=row[ClassKeys.CLASS_CATALOG_NBR.value],
@@ -127,11 +133,11 @@ def fetch_courses():
 
                     # Reuse or create section
                     section = db.query(models.Section).filter_by(
-                        course_id=row[ClassKeys.CLASS_COURSE_ID.value],
-                        section_catalog=row[ClassKeys.CLASS_SECTION.value]
+                        id = row[ClassKeys.CLASS_CLASS_NBR.value]
                     ).first()
                     if not section:
                         section = models.Section(
+                            id = row[ClassKeys.CLASS_CLASS_NBR.value],
                             course_id=course.id,
                             section_catalog=row[ClassKeys.CLASS_SECTION.value],
                             instruction_type=row[ClassKeys.CLASS_INSTRUCTION_MODE_LDESC.value],
@@ -142,16 +148,6 @@ def fetch_courses():
                         )
                         db.add(section)
                         db.flush()
-
-                    # Always insert meeting (a section can have many meetings)
-                    meeting = models.Meeting(
-                        section_id=section.id,
-                        days_of_week="".join([day.value for day in days_of_week if row[day.value]]),
-                        time_start=str(row[ClassKeys.CLASSM_MEETING_TIME_START.value]),
-                        time_end=str(row[ClassKeys.CLASSM_MEETING_TIME_END.value]),
-                        location=row[ClassKeys.CLASSM_FACILITY_LDESC.value],
-                    )
-                    db.add(meeting)
 
                     # Link professor to section
                     section_professor = db.query(models.SectionProfessor).filter_by(
@@ -167,6 +163,30 @@ def fetch_courses():
                         )
                         
                         db.add(section_professor)
+                    
+                    # Create a meeting time
+                    meeting = db.query(models.Meeting).filter_by(
+                        section_id=section.id,
+                        days_of_week="".join([day.value for day in days_of_week if row[day.value]]),
+                        time_start=str(row[ClassKeys.CLASSM_MEETING_TIME_START.value]),
+                        time_end=str(row[ClassKeys.CLASSM_MEETING_TIME_END.value]),
+                        location=row[ClassKeys.CLASSM_FACILITY_LDESC.value],
+                    ).first()
+                    if not meeting:
+                        meeting = models.Meeting(
+                            section_id=section.id,
+                            days_of_week="".join([day.value for day in days_of_week if row[day.value]]),
+                            time_start=str(row[ClassKeys.CLASSM_MEETING_TIME_START.value]),
+                            time_end=str(row[ClassKeys.CLASSM_MEETING_TIME_END.value]),
+                            location=row[ClassKeys.CLASSM_FACILITY_LDESC.value],
+                        )
+                        db.add(meeting)
+                        
+                    # TODO Add self referential many to many relationship for sections.
+                    # This will allow parent child sections where a parent is a lecture and child could be lab/discussion.
+                    # TODO also logic for generating these relationships
+                    # For each professor that is a PI of a lecture,
+                    #   Their lab/discussion sections are those they are a SI in
 
                 db.commit()
             except Exception as db_error:
@@ -185,20 +205,24 @@ fetch_courses()
 trigger = CronTrigger(second='0')
 scheduler.add_job(fetch_courses, trigger)
 
-
 @app.get("/")
 async def root():
-    return { "message" : "Hello World" }
+    return { "message" : "Husky Plan!" }
 
-@app.get("/classes/{course_id}")
-async def classes(course_id: int, db: Session = Depends(get_db)):
-    logger.debug(course_id)
-    classes = crud.get_course_by_course_id(db, course_id)
+@app.get("/classes", response_model=CourseSchema)
+async def classes(subject: str, catalog_number: str, db: Session = Depends(get_db)):
+    logger.debug(f"Subject: {subject}, Catalog Number: {catalog_number}")
+    classes = crud.get_course_by_subject_and_catalog_number(db, subject, catalog_number)
     
-    # TODO Serialize response
     if classes is None:
         raise HTTPException(status_code=404, detail="Class not found")
     return classes
+
+# Generate openapi schema
+openapi_schema = app.openapi()
+openapi_path = os.path.join(os.path.dirname(__file__), "constants", "openapi.json")
+with open(openapi_path, "w") as f:
+    json.dump(openapi_schema, f, indent=2)
     
 if __name__ == '__main__':
     uvicorn.run(app, host="0.0.0.0", port = 8000)

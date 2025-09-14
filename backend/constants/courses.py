@@ -5,6 +5,7 @@ class ClassKeys(Enum):
     CLASS_SESSION_LDESC = "CLASS_SESSION_LDESC"
     CLASS_ACAD_ORG_LDESC = "CLASS_ACAD_ORG_LDESC"
     CLASS_CAMPUS_LDESC = "CLASS_CAMPUS_LDESC"
+    CLASS_CLASS_NBR = "CLASS_CLASS_NBR" # AKA Section Unique ID
     CLASS_COURSE_ID = "CLASS_COURSE_ID"
     CLASS_SUBJECT_LDESC = "CLASS_SUBJECT_LDESC"
     CLASS_SUBJECT_CD = "CLASS_SUBJECT_CD"
@@ -33,58 +34,3 @@ class ClassKeys(Enum):
     CLASS_ENRL_TOT = "CLASS_ENRL_TOT"
     CLASS_WAIT_CAP = "CLASS_WAIT_CAP"
     CLASS_WAIT_TOT = "CLASS_WAIT_TOT"
-
-
-def safe_int(x):
-    try:
-        return int(x)
-    except (ValueError, TypeError):
-        return None
-
-def safe_float(x):
-    try:
-        return float(x)
-    except (ValueError, TypeError):
-        return None
-
-def yn_to_bool(x):
-    if str(x).strip().upper() == 'Y':
-        return True
-    elif str(x).strip().upper() == 'N':
-        return False
-    return None
-
-CLASS_CONVERTERS = {
-    "CLASS_TERM_LDESC": str,
-    "CLASS_SESSION_LDESC": str,
-    "CLASS_ACAD_ORG_LDESC": str,
-    "CLASS_CAMPUS_LDESC": str,
-    "CLASS_COURSE_ID": str,
-    "CLASS_SUBJECT_LDESC": str,
-    "CLASS_SUBJECT_CD": str,
-    "CLASS_CATALOG_NBR": str,
-    "CLASS_SECTION": str,
-    "CLASS_COMPONENT_LDESC": str,
-    "CLASS_COMPONENT_CD": str,
-    "CASSC_UNITS_MINIMUM": safe_float,
-    "CASSC_UNITS_MAXIMUM": safe_float,
-    "CLASS_DESCR": str,
-    "CLASSM_MONDAY": yn_to_bool,
-    "CLASSM_TUESDAY": yn_to_bool,
-    "CLASSM_WEDNESDAY": yn_to_bool,
-    "CLASSM_THURSDAY": yn_to_bool,
-    "CLASSM_FRIDAY": yn_to_bool,
-    "CLASSM_SATURDAY": yn_to_bool,
-    "CLASSM_SUNDAY": yn_to_bool,
-    "CLASSM_MEETING_TIME_START": str,
-    "CLASSM_MEETING_TIME_END": str,
-    "Define_CLASSM_INSTRUCTOR_EMPLID": safe_int,
-    "Define_CLASSM_INSTRUCTOR_NAME": str,
-    "CLASSM_INSTRUCTOR_ROLE": str,
-    "CLASS_INSTRUCTION_MODE_LDESC": str,
-    "CLASSM_FACILITY_LDESC": str,
-    "CLASS_ENRL_CAP": safe_int,
-    "CLASS_ENRL_TOT": safe_int,
-    "CLASS_WAIT_CAP": safe_int,
-    "CLASS_WAIT_TOT": safe_int,
-}
