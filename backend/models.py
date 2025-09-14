@@ -8,7 +8,7 @@ from backend.database import Base
 class Course(Base):
     __tablename__ = "courses"
     
-    id: Mapped[str] = mapped_column(primary_key=True, unique=True)
+    id: Mapped[int] = mapped_column(primary_key=True, unique=True)
     subject_code: Mapped[str] = mapped_column()
     subject_desc: Mapped[Optional[str]] = mapped_column()
     catalog_number: Mapped[str] = mapped_column()
@@ -22,8 +22,8 @@ class Course(Base):
 class Section(Base):
     __tablename__ = "sections"
     
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    course_id: Mapped[str] = mapped_column(ForeignKey("courses.id"))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"))
     section_catalog: Mapped[str] = mapped_column()
     instruction_type: Mapped[Optional[str]] = mapped_column()
     enrollment_cap: Mapped[Optional[int]] = mapped_column()
