@@ -1,0 +1,378 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FastAPI",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/classes": {
+      "get": {
+        "summary": "Classes",
+        "operationId": "classes_classes_get",
+        "parameters": [
+          {
+            "name": "subject",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subject"
+            }
+          },
+          {
+            "name": "catalog_number",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Catalog Number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CourseSchema": {
+        "properties": {
+          "subject_code": {
+            "type": "string",
+            "title": "Subject Code"
+          },
+          "subject_desc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Desc"
+          },
+          "catalog_number": {
+            "type": "string",
+            "title": "Catalog Number"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "min_credits": {
+            "type": "integer",
+            "title": "Min Credits"
+          },
+          "max_credits": {
+            "type": "integer",
+            "title": "Max Credits"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/SectionSchema"
+            },
+            "type": "array",
+            "title": "Sections",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject_code",
+          "subject_desc",
+          "catalog_number",
+          "description",
+          "min_credits",
+          "max_credits"
+        ],
+        "title": "CourseSchema"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MeetingSchema": {
+        "properties": {
+          "days_of_week": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Days Of Week"
+          },
+          "time_start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Start"
+          },
+          "time_end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time End"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          }
+        },
+        "type": "object",
+        "required": [
+          "days_of_week",
+          "time_start",
+          "time_end",
+          "location"
+        ],
+        "title": "MeetingSchema"
+      },
+      "ProfessorSchema": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "ProfessorSchema"
+      },
+      "SectionProfessorSchema": {
+        "properties": {
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "professor": {
+            "$ref": "#/components/schemas/ProfessorSchema"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "professor"
+        ],
+        "title": "SectionProfessorSchema"
+      },
+      "SectionSchema": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "section_catalog": {
+            "type": "string",
+            "title": "Section Catalog"
+          },
+          "instruction_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instruction Type"
+          },
+          "enrollment_cap": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enrollment Cap"
+          },
+          "enrollment_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enrollment Total"
+          },
+          "waitlist_cap": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waitlist Cap"
+          },
+          "waitlist_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waitlist Total"
+          },
+          "professors": {
+            "items": {
+              "$ref": "#/components/schemas/SectionProfessorSchema"
+            },
+            "type": "array",
+            "title": "Professors",
+            "default": []
+          },
+          "meetings": {
+            "items": {
+              "$ref": "#/components/schemas/MeetingSchema"
+            },
+            "type": "array",
+            "title": "Meetings",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "section_catalog",
+          "instruction_type",
+          "enrollment_cap",
+          "enrollment_total",
+          "waitlist_cap",
+          "waitlist_total"
+        ],
+        "title": "SectionSchema"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

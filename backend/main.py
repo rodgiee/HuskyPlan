@@ -5,6 +5,7 @@ import logging
 import requests
 import uvicorn
 import io 
+import json
 import pandas as pd
 from backend.constants.courses import ClassKeys
 import numpy as np
@@ -15,6 +16,7 @@ from sqlalchemy.orm import Session
 import backend.crud as crud, backend.models as models
 from backend.database import SessionLocal, engine
 from backend.schemas import CourseSchema
+import os
 
 # We don't want this feature
 pd.set_option('future.no_silent_downcasting', True)
@@ -203,7 +205,6 @@ fetch_courses()
 trigger = CronTrigger(second='0')
 scheduler.add_job(fetch_courses, trigger)
 
-
 @app.get("/")
 async def root():
     return { "message" : "Husky Plan!" }
@@ -216,6 +217,12 @@ async def classes(subject: str, catalog_number: str, db: Session = Depends(get_d
     if classes is None:
         raise HTTPException(status_code=404, detail="Class not found")
     return classes
+
+# Generate openapi schema
+openapi_schema = app.openapi()
+openapi_path = os.path.join(os.path.dirname(__file__), "constants", "openapi.json")
+with open(openapi_path, "w") as f:
+    json.dump(openapi_schema, f, indent=2)
     
 if __name__ == '__main__':
     uvicorn.run(app, host="0.0.0.0", port = 8000)
