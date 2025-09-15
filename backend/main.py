@@ -11,6 +11,7 @@ from backend.constants.courses import ClassKeys
 import numpy as np
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 import backend.crud as crud, backend.models as models
@@ -46,6 +47,19 @@ async def lifespan(app: FastAPI):
 
 # App setup
 app = FastAPI(lifespan = lifespan)
+
+origins = [
+    "http://localhost",
+    "http://localhost:3000"
+    "http://localhost:8080"
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # The cron job for fetching courses
 def fetch_courses():
