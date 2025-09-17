@@ -1,61 +1,77 @@
-import {useState} from "react";
-import "./Modal.css";
+import { useState } from "react";
+import MuiModal from "@mui/material/Modal";
+import Paper from "@mui/material/Paper";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
 
-function Modal(props: any){
-	// class useState passed in to add more classes from modal input
-	const classes = props.classes;
-	const setClasses = props.setClasses;
-
-
-	// to callback to close out modal
-	const toggleModal = props.setModal;
-
-	const [classInput, setClassInput] = useState("");
-
-	function handleSubmit(e : any) {
-		// Prevent the browser from reloading the page
-		e.preventDefault();
-
-		// Read the form data
-		const form = e.target;
-		const formData = new FormData(form);
-
-		// You can pass formData as a fetch body directly:
-		//fetch('/some-api', { method: form.method, body: formData });
-
-		// Or you can work with it as a plain object:
-		const formJson = Object.fromEntries(formData.entries());
-
-
-		// add new class entry to existing list
-		const formInput = String(formJson.classInput)
-		setClasses(classes.concat(
-			{
-				name: formInput,
-				id: Math.random() * 100 // placeholder, DO NOT USE MATH.random in FINAL PRODUCT
-			}
-		));
-
-		// clear form input afer submission
-		setClassInput("");
-	  }
-	return(
-		<>
-			<div className="overlay">
-				<div className="modal-box">
-					<h3 className="modal-header">HuskyPlan Classes</h3>
-					<form method="post" onSubmit={handleSubmit}>
-						<label>
-							{/* value and onChange are assigned state variable to be allowed to be cleared on submission */}
-							Class: <input value={classInput} onChange={(e)=> setClassInput(e.target.value)} name="classInput"/>
-						</label>
-					</form>
-					<button onClick={toggleModal} className="modal-close">Close</button>
-				</div>
-			</div>
-		</>
-	);
-
+interface ModalProps {
+  toggleModal: any;
+  handleAddClass: any;
+  isModalOpen: boolean;
 }
 
-export default Modal
+function Modal({ toggleModal, handleAddClass, isModalOpen }: ModalProps) {
+  // class useState passed in to add more classes from modal input
+
+  const [courseSubject, setCourseSubject] = useState("");
+  const [courseCatalog, setCourseCatalog] = useState("");
+
+  return (
+    <MuiModal
+      open={isModalOpen}
+      onClose={toggleModal}
+      aria-labelledby="add-class-modal-title"
+      aria-describedby="add-class-modal-description"
+    >
+      <Paper
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 300,
+          p: 3,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        <Typography id="add-class-modal-title" variant="h6" component="h2">
+          Add Class
+        </Typography>
+        <TextField
+          label="Course Catalog"
+          value={courseSubject}
+          placeholder="e.g. ACCT"
+          onChange={(e) => setCourseSubject(e.target.value)}
+          autoFocus
+        />
+        <TextField
+          label="Course #"
+          placeholder="e.g. 2001"
+          value={courseCatalog}
+          onChange={(e) => setCourseCatalog(e.target.value)}
+          autoFocus
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => {
+            toggleModal();
+            setCourseCatalog("");
+            setCourseSubject("");
+            handleAddClass(courseSubject, courseCatalog);
+          }}
+        >
+          Add
+        </Button>
+        <Button variant="text" color="secondary" onClick={toggleModal}>
+          Cancel
+        </Button>
+      </Paper>
+    </MuiModal>
+  );
+}
+
+export default Modal;
