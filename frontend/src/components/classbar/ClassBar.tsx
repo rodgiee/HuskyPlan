@@ -7,73 +7,68 @@ import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
-import Modal from "./modal/Modal";
+import AddClassModal from "../modals/AddClassModal";
+import IconButton from "@mui/material/IconButton";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
+import { DefaultApi, type CourseSchema } from "../../api-client";
+import InfoIcon from "@mui/icons-material/Info";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ClassInfoModal from "../modals/ClassInfoModal";
 
 interface ClassBarProps {
-  classes: any;
+  classes: CourseSchema[];
   setClasses: React.Dispatch<React.SetStateAction<any>>;
 }
-
-const API_URL = "http://localhost:8080";
 
 function ClassBar({ classes, setClasses }: ClassBarProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [focusedClass, setFocusedClass] = useState<CourseSchema>();
+  // Modals
+  const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
+  const [isClassInfoModalOpen, setIsClassInfoModalOpen] = useState(false);
 
-  function removeClass(removeId: any) {
-    const removedIdList = classes.filter(
-      (classCurrent: any) => classCurrent.id !== removeId
+  function handleRemoveClass(classToRemove: CourseSchema) {
+    const filteredClasses = classes.filter(
+      (classCurrent: CourseSchema) =>
+        classCurrent.subject_code !== classToRemove.subject_code &&
+        classCurrent.subject_code !== classToRemove.catalog_number
     );
-    setClasses(removedIdList);
+    setClasses(filteredClasses);
   }
 
-  // allow modal to be opened and closed
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  function toggleModal() {
-    setIsModalOpen(!isModalOpen);
-  }
-
-  async function fetchClassFromAPI(
-    courseSubject: string,
-    courseCatalog: string
-  ) {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(
-        `${API_URL}/classes?subject=${encodeURIComponent(
-          courseSubject
-        )}&catalog_number=${encodeURIComponent(courseCatalog)}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch class");
-      return await response.json();
-    } catch (err: any) {
-      setError(err.message || "Unknown error");
-      setSnackbarOpen(true);
-      return null;
-    } finally {
-      setLoading(false);
-    }
+  function handleClassInfo(targetClass: CourseSchema) {
+    setFocusedClass(targetClass);
+    console.log(targetClass);
+    setIsClassInfoModalOpen(true);
   }
 
   async function handleAddClass(courseSubject: string, courseCatalog: string) {
     if (courseSubject.trim() !== "") {
-      const courseData = await fetchClassFromAPI(courseSubject, courseCatalog);
-      if (courseData) {
-        setClasses([
-          ...classes,
-          {
-            name: courseSubject + " " + courseCatalog,
-            id: courseSubject,
-            data: courseData,
-          },
-        ]);
-        setIsModalOpen(false);
+      const api = new DefaultApi();
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await api.classesClassesGet(
+          courseSubject,
+          courseCatalog
+        );
+
+        if (response.status == 200) {
+          const courseToAdd = response.data;
+          setClasses([...classes, courseToAdd]);
+          setIsAddClassModalOpen(false);
+        }
+      } catch (err: any) {
+        setError(err?.response?.data?.detail ?? "An Unknown Error Occurred.");
+        setSnackbarOpen(true);
+      } finally {
+        setLoading(false);
       }
     }
   }
@@ -94,6 +89,7 @@ function ClassBar({ classes, setClasses }: ClassBarProps) {
         },
       }}
     >
+      {/* Top */}
       <Box sx={{ p: 2 }}>
         <Typography variant="h6" fontWeight={700} gutterBottom>
           HuskyPlan
@@ -101,6 +97,7 @@ function ClassBar({ classes, setClasses }: ClassBarProps) {
         <Divider />
       </Box>
 
+      {/* List of Classes */}
       <Box sx={{ flex: 1, overflowY: "auto", px: 2, py: 1 }}>
         <List>
           {classes.length === 0 ? (
@@ -114,27 +111,47 @@ function ClassBar({ classes, setClasses }: ClassBarProps) {
               />
             </ListItem>
           ) : (
-            classes.map((classCurrent: any) => (
+            classes.map((classCurrent: CourseSchema) => (
               <ListItem
-                key={classCurrent.id}
+                key={`${classCurrent.subject_code} ${classCurrent.catalog_number}`}
                 secondaryAction={
-                  <Button
-                    size="small"
-                    color="error"
-                    variant="outlined"
-                    onClick={() => removeClass(classCurrent.id)}
-                  >
-                    Delete
-                  </Button>
+                  <Box>
+                    <IconButton
+                      size="small"
+                      color="info"
+                      aria-label="info"
+                      onClick={() => {
+                        handleClassInfo(classCurrent);
+                      }}
+                      sx={{ mr: 1 }}
+                    >
+                      <InfoIcon />
+                    </IconButton>
+
+                    <IconButton
+                      size="small"
+                      color="error"
+                      aria-label="delete"
+                      onClick={() => {
+                        handleRemoveClass(classCurrent);
+                      }}
+                      sx={{ mr: 1 }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
                 }
               >
-                <ListItemText primary={classCurrent.name} />
+                <ListItemText
+                  primary={`${classCurrent.subject_code} ${classCurrent.catalog_number}`}
+                />
               </ListItem>
             ))
           )}
         </List>
       </Box>
 
+      {/* Bottom Buttons */}
       <Box
         sx={{
           p: 2,
@@ -150,7 +167,7 @@ function ClassBar({ classes, setClasses }: ClassBarProps) {
           variant="contained"
           color="primary"
           sx={{ mb: 1 }}
-          onClick={toggleModal}
+          onClick={() => setIsAddClassModalOpen(!isAddClassModalOpen)}
         >
           Add Class
         </Button>
@@ -158,10 +175,17 @@ function ClassBar({ classes, setClasses }: ClassBarProps) {
           Add Break
         </Button>
       </Box>
-      <Modal
+
+      {/* Modals */}
+      <AddClassModal
         handleAddClass={handleAddClass}
-        toggleModal={toggleModal}
-        isModalOpen={isModalOpen}
+        isAddClassModalOpen={isAddClassModalOpen}
+        setIsAddClassModalOpen={setIsAddClassModalOpen}
+      />
+      <ClassInfoModal
+        isClassInfoModalOpen={isClassInfoModalOpen}
+        setIsClassInfoModalOpen={setIsClassInfoModalOpen}
+        focusedClass={focusedClass}
       />
 
       {/* for error handling */}

@@ -6,20 +6,26 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 
 interface ModalProps {
-  toggleModal: any;
+  setIsAddClassModalOpen: any;
+  isAddClassModalOpen: boolean;
   handleAddClass: any;
-  isModalOpen: boolean;
 }
 
-function Modal({ toggleModal, handleAddClass, isModalOpen }: ModalProps) {
-  // class useState passed in to add more classes from modal input
-
+function AddClassModal({
+  setIsAddClassModalOpen,
+  isAddClassModalOpen,
+  handleAddClass,
+}: ModalProps) {
   const [courseSubject, setCourseSubject] = useState("");
   const [courseCatalog, setCourseCatalog] = useState("");
 
+  const toggleModal = () => {
+    setIsAddClassModalOpen(!isAddClassModalOpen);
+  };
+
   return (
     <MuiModal
-      open={isModalOpen}
+      open={isAddClassModalOpen}
       onClose={toggleModal}
       aria-labelledby="add-class-modal-title"
       aria-describedby="add-class-modal-description"
@@ -74,4 +80,4 @@ function Modal({ toggleModal, handleAddClass, isModalOpen }: ModalProps) {
   );
 }
 
-export default Modal;
+export default AddClassModal;
