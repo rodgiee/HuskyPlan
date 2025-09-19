@@ -30,11 +30,29 @@ function ClassBar(props : any){
 		setModal(!isModalOpen);
 	}
 
+	//DELETE THIS
+	// ONLY USED FOR TESTING
+	async function testFetch(){
+		const url : string = "http://localhost/classes/010493"
+		try {
+			const response = await fetch(url);
+			if (!response.ok) {
+				throw new Error(`Response status: ${response.status}`);
+			}
+
+			const result = await response.json();
+			console.log(result);
+		} catch (error : any) {
+			console.error(error.message);
+		}
+	}
+
 	return(
 		<>
 			<div className="classbar">
 				<div>{mappedClasses}</div>
 				<button onClick={toggleModal} className="button"> Add Class</button>
+				<button onClick={()=>testFetch()}></button>
 				{isModalOpen && <Modal classes={classes} setClasses={setClasses} setModal={toggleModal}/>}
 			</div>
 		</>
